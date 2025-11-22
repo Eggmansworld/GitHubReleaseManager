@@ -248,3 +248,6 @@ Created with love for the preservation community by Eggman, with ChatGPT’s hel
 I am not a qualified programmer by any means, but I know enough to be dangerous. ;)  That being said, I create scripts that assist my own work. I share them in case they might help someone else. If you think my code and apps suck, please feel free to create your own apps. I certainly won't stop you and look forward to checking them out.
 
 If you improve the script, feel free to share your changes back with the community.
+
+<img width="1323" height="506" alt="image" src="https://github.com/user-attachments/assets/075bb996-c894-4029-aef7-213e9a54e678" />
+
