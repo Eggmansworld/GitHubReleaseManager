@@ -538,6 +538,7 @@ class DownloaderGUI:
             foreground=fg,
             arrowsize=16,
         )
+        
         self.style.map("TCombobox", fieldbackground=[("readonly", entry_bg)])
 
         # Spinbox
@@ -678,7 +679,9 @@ class DownloaderGUI:
             textvariable=self.repo_var,
             width=40,
             state="normal",
+            style="TEntry"      # <—— THIS IS THE FIX
         )
+
         self.repo_combo.grid(row=1, column=0, sticky="we", **pad)
         self.repo_combo.bind("<<ComboboxSelected>>", self._on_repo_selected)
 
@@ -714,7 +717,7 @@ class DownloaderGUI:
 
         self.folder_entry = ttk.Entry(folder_frame, textvariable=self.folder_var, width=34)
         self.folder_entry.pack(side="left", fill="x", expand=True)
-
+        
         browse_btn = ttk.Button(folder_frame, text="Browse...", command=self._browse_folder)
         browse_btn.pack(side="left", padx=5)
 
@@ -1038,6 +1041,8 @@ class DownloaderGUI:
             "auto-update, Discord alerts, DAT/PDF export, and more.",
         )
 
+
+
     # ---------- Add Repo ----------
 
     def _add_repo_clicked(self):
@@ -1201,8 +1206,7 @@ class DownloaderGUI:
             self.info_label.config(text="Already up to date.")
             self.log(f"{repo_text}: already up to date.")
             self._update_repo_last_result(repo_text, "Up to date")
-            self._save_metadb()
-            self._refresh_repo_dashboard()
+            self._update_repo_timestamp(repo_text)
             if self.batch_update_mode:
                 self.batch_summary.append(f"{repo_text}: up to date")
                 self._start_next_repo_in_batch()
@@ -1261,20 +1265,20 @@ class DownloaderGUI:
             t.start()
 
         # mark last_checked
-        repo_info = self.repo_db["repos"][repo_text]
-        repo_info["last_checked"] = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%d_%H_%M_%SZ")
-        self._save_metadb()
-        self._refresh_repo_dashboard()
+        self._update_repo_timestamp(repo_text)
 
-    def _ensure_repo_in_db(self, repo_text):
-        if "repos" not in self.repo_db:
-            self.repo_db["repos"] = {}
+
+        # Preserve existing repo entry if present
         if repo_text not in self.repo_db["repos"]:
-            self.repo_db["repos"][repo_text] = {
-                "last_checked": None,
-                "last_result": "",
-                "assets": {},
-            }
+            self.repo_db["repos"][repo_text] = {}
+
+        repo_info = self.repo_db["repos"][repo_text]
+
+        # Normalize required fields
+        repo_info.setdefault("last_checked", None)
+        repo_info.setdefault("last_result", "")
+        repo_info.setdefault("assets", {})
+
         self._save_metadb()
         self._refresh_repo_combo()
         self._refresh_repo_dashboard()
@@ -1343,6 +1347,45 @@ class DownloaderGUI:
         self.repo_db["repos"][repo_text]["last_result"] = result_str
         self._save_metadb()
         self._refresh_repo_dashboard()
+
+    def _ensure_repo_in_db(self, repo_text):
+        """Make sure repo entry exists in repo_db with correct fields."""
+
+        # Create root structure if missing
+        if "repos" not in self.repo_db or not isinstance(self.repo_db["repos"], dict):
+            self.repo_db["repos"] = {}
+
+        # If repo missing, create empty dict (do NOT overwrite existing)
+        if repo_text not in self.repo_db["repos"]:
+            self.repo_db["repos"][repo_text] = {}
+
+        # Normalize fields
+        repo_info = self.repo_db["repos"][repo_text]
+        repo_info.setdefault("last_checked", None)
+        repo_info.setdefault("last_result", "")
+        repo_info.setdefault("assets", {})
+
+        # Save and refresh UI
+        self._save_metadb()
+        self._refresh_repo_combo()
+        self._refresh_repo_dashboard()
+
+
+    def _update_repo_timestamp(self, repo_key):
+        """
+        Update the last_checked timestamp for the given repo.
+        """
+        ts = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%d_%H_%M_%SZ")
+        if "repos" not in self.repo_db:
+            self.repo_db["repos"] = {}
+        repo_info = self.repo_db["repos"].setdefault(
+            repo_key,
+            {"last_checked": None, "last_result": "", "assets": {}}
+        )
+        repo_info["last_checked"] = ts
+        self._save_metadb()
+        self._refresh_repo_dashboard()
+        self.log(f"Updated last_checked for {repo_key} → {ts}")
 
     # ---------- STOP / PAUSE ----------
 
@@ -1491,6 +1534,7 @@ class DownloaderGUI:
             failed = len([r for r in self.asset_records if not r["success"]])
             result_str = f"OK={ok}, Failed={failed}"
             self._update_repo_last_result(repo_text, result_str)
+            self._update_repo_timestamp(repo_text)
 
             try:
                 with open(json_path, "w", encoding="utf-8") as f:
