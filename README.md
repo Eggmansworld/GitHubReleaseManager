@@ -2,7 +2,7 @@ EGGMAN'S GITHUB RELEASE MANAGER
 --------------------------------
 A multi-repo GitHub preservation toolkit.
 
-Eggman’s GitHub Release Manager is a multi-repo GitHub release downloader with metadata tracking, incremental updates, hash verification, auto-update scheduling, Discord notifications, and export utilities (DAT, PDF/TXT summaries, CSV/JSON metadata).
+Eggman’s GitHub Release Manager is a multi-repo GitHub release downloader with metadata tracking, incremental updates, hash verification, auto-update scheduling, Discord notifications, and export utilities (generate RomVault dats, PDF/TXT summaries, CSV/JSON metadata).
 It is built using Python + Tkinter and supports optional drag-and-drop (tkinterdnd2) and optional PDF generation (reportlab).
 
 GENERAL FEATURES
@@ -15,27 +15,29 @@ GENERAL FEATURES
 
 - Multi-threaded downloads with adjustable thread count.
 
-- Per-repo and batch updates (update all tracked repos).
+- output the repo file contents to a RomVault XML datfile (dats should also work in other Rom managers, but I do not check for usefulness beyond RomVault)
 
-- Automatic folder organization:
-	- Root download folder contains one folder per repo.
-	- Release tags become subfolders inside the repo folder.
-
-Metadata system:
-	- Per-repo assets stored in eggman_github_repos.json.
-	- Additional per-repo CSV/JSON logs stored in _metadata.
-
-- Full SHA-1 hashing for integrity checks.
-
-- Optional Discord webhook notifications for update results.
+- Full SHA-1 hashing for integrity checks. CRC32 is also computed when creating an XML datfile.
 
 - Auto-update mode:
 	- Update all repos every X minutes.
 	- Interval is user-configurable.
 
+- Per-repo and batch updates (update all tracked repos).
+
+- Automatic folder organization:
+	- Root download folder contains one folder per repo.
+	- GitHub Release tags become subfolders inside the repo folder.
+
+Metadata system:
+	- Per-repo asset details stored in JSON format.
+	- Additional per-repo CSV/JSON logs stored in a separate metadata folder outside of the repo's and their files.
+
+- Optional Discord webhook notifications for update results.
+
 - Activity log panel shows real-time progress and worker output.
 
-- Modern dark UI theme with orange highlights.
+- Modern dark UI theme with orange highlights. Easy on the eyes.
 
 METADATA & FILE ORGANIZATION
 ---
