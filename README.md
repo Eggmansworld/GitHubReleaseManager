@@ -1,253 +1,250 @@
-Eggman’s GitHub Release Manager is a multi-repo GitHub release downloader designed for digital preservation, long-term archiving, and automated syncing of release assets.
-It supports metadata tracking, incremental updates, SHA-1 hashing, automatic rebuilds, Discord webhook notifications, and multiple export formats (DAT, CSV, JSON, PDF/TXT).
+EGGMAN'S GITHUB RELEASE MANAGER
+--------------------------------
+A multi-repo GitHub preservation toolkit.
 
-This tool is built using Python + Tkinter, with optional enhancements such as drag-and-drop (tkinterdnd2) and PDF generation (reportlab).
+Eggman’s GitHub Release Manager is a multi-repo GitHub release downloader with metadata tracking, incremental updates, hash verification, auto-update scheduling, Discord notifications, and export utilities (DAT, PDF/TXT summaries, CSV/JSON metadata).
+It is built using Python + Tkinter and supports optional drag-and-drop (tkinterdnd2) and optional PDF generation (reportlab).
 
-✨ Features
-Release Downloading
+GENERAL FEATURES
+---
+- Track multiple GitHub repositories at once.
 
-Multi-threaded downloads with adjustable thread count
+- Incremental downloading:
+	- Downloads only missing/changed assets.
+	- Supports resume via HTTP Range requests.
 
-Resume support via HTTP Range
+- Multi-threaded downloads with adjustable thread count.
 
-Detects and downloads only changed/missing assets
+- Per-repo and batch updates (update all tracked repos).
 
-Per-asset progress reporting (%, speed, ETA)
+- Automatic folder organization:
+	- Root download folder contains one folder per repo.
+	- Release tags become subfolders inside the repo folder.
 
-Per-tag folder organization inside each repo
+Metadata system:
+	- Per-repo assets stored in eggman_github_repos.json.
+	- Additional per-repo CSV/JSON logs stored in _metadata.
 
-SHA-1 hashing for integrity verification
+- Full SHA-1 hashing for integrity checks.
 
-Repository Management
+- Optional Discord webhook notifications for update results.
 
-Track multiple repositories
+- Auto-update mode:
+	- Update all repos every X minutes.
+	- Interval is user-configurable.
 
-Update one repo or all repos (oldest checked first)
+- Activity log panel shows real-time progress and worker output.
 
-Choose a custom root download directory
+- Modern dark UI theme with orange highlights.
 
-Automatic update mode with configurable intervals
+METADATA & FILE ORGANIZATION
+---
+Each repo uses the following structure:
 
-Pause / Resume / Safe Stop / Hard Stop controls
+	<root_download_folder>\
+		owner_repo\
+			<tag1>\
+			<tag2>\
+			...
+			orphans\
+		_metadata\
+			json\
+			csv\
+			dat\
+			pdf\
+			logs\
 
-Detailed activity log panel
+- All metadata files (JSON/CSV/DAT/PDF/TXT) are placed under _metadata.
+- Legacy metadata files found in the repo's root folder are automatically migrated into _metadata.
+- When rebuilding metadata, JSON/CSV files are regenerated only if missing.
 
-Metadata System
-
-All metadata is stored under:
-
-_metadata/
-   json/
-   csv/
-   dat/
-   pdf/
-   logs/
-
-
-Includes:
-
-Per-repo JSON metadata files
-
-CSV files listing all assets
-
-RomVault-compatible XML DAT export
-
-TXT and optional PDF summaries
-
-Metadata logs and download timestamps
-
-Automatic Metadata Rebuilds
-
-Running Scan Local Files (Rebuild Metadata) will:
-
-Reindex all local files
-
-Update internal metadata for each asset
-
-Automatically regenerate JSON/CSV metadata only if missing
-
-Hashing
-
-SHA-1 for all downloaded or rescanned files
-
-“Force Hash Rescan” option
-
-CRC32 included in DAT exports
-
-Orphan Detection
-
-Finds files not present in metadata
-
-Moves them to a dedicated /orphans folder
-
-Provides a summary of moved files
-
-Export Tools
-
-JSON export
-
-CSV export
-
-TXT summary
-
-PDF summary (requires reportlab)
-
-RomVault XML DAT file generator
-
-Discord Webhook Support
-
-If configured:
-
-Sends update notifications for each repo
-
-Supports errors, successes, and batch update reports
-
-Works with auto-update mode
-
-📁 Folder Structure
-
-A typical repo download looks like:
-
-owner_repo/
-   <tag1>/
-   <tag2>/
-   ...
-   orphans/
-_metadata/
-   json/
-   csv/
-   dat/
-   pdf/
-   logs/
-
-
-All repository metadata, logs, and exports live inside _metadata, keeping the root folder clean.
-
-🧠 Timestamps
-
-All timestamps use a universal UTC format:
+TIMESTAMPS
+---
+All timestamps use:
 
 YYYY-MM-DD_HH_MM_SSZ
 
+Format is stable, consistent, timezone-aware, and uses UTC ("Z").
 
-Examples:
+DOWNLOAD PROCESS
+---
+- Retrieves all releases for a repo through the GitHub API.
+- Skips existing files if “Only download new/changed/missing assets” is enabled.
+- Downloads each asset with:
+	- Resume support.
+	- Size verification.
+	- SHA-1 hashing.
+- Progress reporting (percent, MB/s, ETA).
+- Writes new metadata after each asset completes.
 
-2025-11-22_13_45_09Z
-2025-05-31_08_10_22Z
+AUTOMATIC REBUILDS DURING “SCAN LOCAL FILES”
+---
+When running Scan Local Files (Rebuild Metadata):
+- Local files are indexed.
+- Tags are determined from top-level subfolders under the repo’s folder.
+- Hashing and metadata fields are updated.
+- JSON/CSV metadata inside _metadata are automatically recreated if missing.
 
+EXPORT FEATURES
+---
+- Generate DAT (selected repo):
+	- Produces a RomVault-style XML .dat file.
+	- Game name = release tag folder name.
+	- Handles nested files via relative paths.
 
-This format avoids ambiguity, avoids locale conflicts, and is stable for archival purposes.
+- Generate PDF Summary (selected repo):
+	- Requires reportlab.
+	- If missing, falls back to generating a TXT file.
 
-🛠 Requirements
+- Export DB…
+	- Saves eggman_github_repos.json externally for backup.
 
-Python 3.10+ (tested fully on Python 3.13)
+ORPHAN CLEANUP
+---
+- Finds files in the repo folder that are missing from metadata.
+- Moves all orphans into a dedicated orphans subfolder.
+- Produces a summary of how many files were moved.
 
-Standard libraries:
+HASH RESCAN
+---
+- Recomputes SHA-1 for all known assets.
+- Updates metadata in eggman_github_repos.json.
+- Reports successes and missing files.
 
-tkinter
+AUTO-UPDATE MODE
+---
+- When enabled, runs a full multi-repo update on a timer.
+- Intervals are in minutes (minimum 5).
+- Auto-update includes Discord notifications per repo.
 
-json
+CONTROLS & BUTTONS
+---
 
-csv
+- Update Selected Repo
+	- Fetch and download assets for the current repo.
 
-threading
+- Update ALL Repos
+	- Processes repos in order of oldest “last checked.”
 
-datetime
+- Safe Stop
+	- Finishes current downloads but skips remaining tasks.
 
-Additional modules:
+- Hard Stop
+	- Aborts all threads as soon as possible.
 
+- Pause / Resume
+	- Suspends active downloads temporarily.
+
+REQUIREMENTS
+---
+Python 3.10+ recommended (tested on 3.13).
+
+Modules used:
 requests
+tkinter (built-in)
+tkinterdnd2 (optional)
+reportlab (optional)
 
-Optional modules:
+CONFIG FILES
+---
+These 2 config files are stored alongside the python script's location.
 
-reportlab (PDF support)
+- eggman_github_dl_config.json
+	- Stores general settings (root path, webhook URL, auto-update settings, etc.)
 
-tkinterdnd2 (drag-and-drop support)
+- eggman_github_repos.json
+	- Persistent metadata for all tracked repos.
+	- Stores last_checked, last_result, and detailed asset hashes/sizes/paths.
 
-🚀 Running the Program
+RUNNING THE PROGRAM
+---
+Run via:
 
-From your command line:
+	python "Eggman's GitHub Release Manager.py"
 
-python "Eggman's GitHub Release Manager.py"
+The interface will open immediately and load saved settings.
 
+DASHBOARD USAGE
+---
 
-When the UI starts:
+1. Adding a Repo:
+- Enter "owner/repo" in the GitHub repo box
+	- example:  Eggmansworld/Datfiles
+	OR 
+ - paste a GitHub URL (the tool converts it automatically)
+	- example: https://github.com/Eggmansworld/Datfiles
+- Click "Add Repo" button, which then adds the repo to the Tracked Repos list.
 
-Choose or create your root download folder.
+2. Choose a Root Download Folder:
+- This folder will contain:
+	- root_folder/owner_repo/tag/asset.ext
+- This is the folder where you want your repo's to be downloaded to.
 
-Add a GitHub repo (full URL or owner/repo format).
+3. Updating a Repo:
+- highlight the repo in the Tracked Repos list
+- Click "Update Selected Repo" button
+- This downloads missing or changed assets and updates metadata.
 
-Click Update Selected Repo or Update All Repos.
+4. Updating All Repos:
+- Click the "Update ALL Repos" button
+- Repositories are updated in order of the oldest "last checked" time.
 
-View downloaded assets under the repo’s folder.
+5. Dashboard Controls:
+- Double-click repo: open its folder
+- Right-click repo context menu 
+	- Open Repo Folder
+	- Force Hash Rescan
+	- Generate Dat File
+	- Generate PDF Summary
+	- Cleanup Orphans
+	- Scan Local Files (Rebuild Metadata)
+	- Remove From Tracker
+	
+6. Exported Metadata:
+- Every update produces:
+	- JSON asset list (if file missing, it is recreated)
+	- CSV asset list (if file missing, it is recreated)
+	- Optional DAT file (when selected)
+	- Optional PDF summary (when selected)
 
-Your repositories and settings will be saved between runs.
+7. Auto-Update:
+- Enable auto-update and choose an interval (min 5 minutes)
+- The tool will:
+	- Scan all repos
+	- Download updates
+	- Leave a log entry
+	- Send Discord notifications (optional)
+	- Runs quietly in the background.
 
-⚙ Configuration Files
-eggman_github_dl_config.json
+MAINTENANCE TOOLS
+---
 
-Stores:
+Orphan Cleanup:
+- Finds files not listed in metadata
+- Moves them into: owner_repo/orphans/
 
-Root download path
+Force Hash Rescan:
+- Recomputes hashes for every known asset
+- Updates the metadata database
 
-Auto-update settings
+Discord Notifications:
+- Enter a Discord webhook URL to get update summaries
+- the tool will send:
+	repo_name: update finished — OK=xx, failed=yy
+	
+NOTES
+---
 
-Discord webhook URL
+- GitHub rate limits apply; the script uses safe request pacing
+- Private repos require manual authentication integration (not yet implemented)
+- PDF support requires reportlab; otherwise TXT summary is used
+- DAT exports are simplified and suitable for basic set tracking
 
-UI options
+CREDITS
+---
 
-eggman_github_repos.json
+Created with love for the preservation community by Eggman, with ChatGPT’s help turning ideas into code.
 
-Stores:
+I am not a qualified programmer by any means, but I know enough to be dangerous. ;)  That being said, I create scripts that assist my own work. I share them in case they might help someone else. If you think my code and apps suck, please feel free to create your own apps. I certainly won't stop you and look forward to checking them out.
 
-Tracked repositories
-
-Tags discovered
-
-Asset metadata (size, SHA-1, path)
-
-Per-repo timestamps
-
-Last update results
-
-These are created automatically.
-
-🔒 Preservation-Focused Integrity
-
-This tool emphasizes:
-
-Accurate file preservation
-
-Reproducible metadata
-
-Clean version tracking
-
-Consistent UTC timestamps
-
-Compatibility with RomVault, Logiqx DATs, and other archival pipelines
-
-Every asset includes:
-
-Filename
-
-Release tag
-
-Absolute path
-
-SHA-1 hash
-
-Size in bytes
-
-Download timestamp
-
-📌 Notes
-
-PDF generation requires reportlab; otherwise a TXT summary is generated.
-
-Auto-update mode enforces a minimum interval of 5 minutes.
-
-Metadata is automatically recreated when missing but not overwritten unless needed.
-
-📣 Credits
-
-Created by Eggman for large-scale GitHub release archiving, digital preservation workflows, and consistent long-term metadata tracking.
+If you improve the script, feel free to share your changes back with the community.
