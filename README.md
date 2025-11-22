@@ -15,7 +15,7 @@ GENERAL FEATURES
 
 - Multi-threaded downloads with adjustable thread count.
 
-- output the repo file contents to a RomVault XML datfile (dats should also work in other Rom managers, but I do not check for usefulness beyond RomVault)
+- output a tracked repo's file structure and hash info to a RomVault XML datfile (dats should also work in other Rom managers, but I do not check for usefulness beyond RomVault). This is my MAIN reason for creating this app, so I can routinely create datfiles for repo's I track and preserve their content in my own collection, managed by RomVault.
 
 - Full SHA-1 hashing for integrity checks. CRC32 is also computed when creating an XML datfile.
 
@@ -227,6 +227,8 @@ DASHBOARD USAGE
 	- Leave a log entry
 	- Send Discord notifications (optional)
 	- Runs quietly in the background.
+
+NOTE!  Avoid excessively frequent update checks to prevent GitHub rate-limiting. I would recommend checking your repos every 6 hours or more, especially on large repos with many files. If you are seeing rate limited messages in the activity window, SLOW DOWN YOUR UPDATE REQUESTS.  It's not my ass on the line if you do stupid things.
 
 MAINTENANCE TOOLS
 ---
