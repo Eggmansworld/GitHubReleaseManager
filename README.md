@@ -163,6 +163,12 @@ If you delete these, they will be recreated after you re-add the repo(s) and res
 
 RUNNING THE PROGRAM
 ---
+
+TIPS:
+- If you decide you want to keep this app as part of your toolkit, place the script somewhere static and use one of the batch files as a shortcut for ease of use
+- it is recommended to setup a static download folder to store the repo's files.
+- The app is portable so you can move your stuff somewhere else, set it up and carry on with your workloads.
+
 Run via:
 
 	python "Eggman's GitHub Release Manager.py"
