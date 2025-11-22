@@ -147,7 +147,7 @@ reportlab (optional)
 
 CONFIG FILES
 ---
-These 2 config files are stored alongside the python script's location.
+There are 2 config files that are stored alongside the python script's location.
 
 - eggman_github_dl_config.json
 	- Stores general settings (root path, webhook URL, auto-update settings, etc.)
@@ -156,16 +156,20 @@ These 2 config files are stored alongside the python script's location.
 	- Persistent metadata for all tracked repos.
 	- Stores last_checked, last_result, and detailed asset hashes/sizes/paths.
 
+If you delete these, they will be recreated after you re-add the repo(s) and rescan any existing files or re-download the repo.
+
+
 RUNNING THE PROGRAM
 ---
 Run via:
 
 	python "Eggman's GitHub Release Manager.py"
 
-The interface will open immediately and load saved settings.
+The interface will open immediately and load saved settings.  I've included some batch files if you want a quick way to get the app started.
 
 DASHBOARD USAGE
 ---
+<img width="1185" height="511" alt="image" src="https://github.com/user-attachments/assets/793ace52-7fb6-4e20-9719-c2246310868d" />
 
 1. Adding a Repo:
 - Enter "owner/repo" in the GitHub repo box
@@ -245,9 +249,6 @@ CREDITS
 
 Created with love for the preservation community by Eggman, with ChatGPT’s help turning ideas into code.
 
-I am not a qualified programmer by any means, but I know enough to be dangerous. ;)  That being said, I create scripts that assist my own work. I share them in case they might help someone else. If you think my code and apps suck, please feel free to create your own apps. I certainly won't stop you and look forward to checking them out.
+I am by no means a coder! I've never received or taken any formal training since a brief stint of Java and ASM in College a long, long time ago. I create scripts that assist my own needs and projects and as long as they work, I'm not overly concerned about how they look or feel. Do not expect the code you find here to be free from defects or devoid of benign code snippets I forgot to remove. I enjoy learning how to take my ideas and turn them into code with a heavy amount of assistance from AI, and I'm not at all ashamed of admitting such. I share this code for any other data preservationists who might also find the script useful for their own needs. If you think my code is bad, I wholeheartedly agree it probably is.  If you can "Rock the Casbah" with your own superior coding skills, please feel free to create your own version of this app and let me know - I look forward to checking it out!
 
 If you improve the script, feel free to share your changes back with the community.
-
-<img width="1323" height="506" alt="image" src="https://github.com/user-attachments/assets/075bb996-c894-4029-aef7-213e9a54e678" />
-
