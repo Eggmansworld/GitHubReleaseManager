@@ -477,6 +477,9 @@ class DownloaderGUI:
 
         # multi-repo DB
         self.repo_db = self._load_metadb()
+        
+        # Load tracked_repos.txt (if it exists)
+        self._load_tracked_repo_list("tracked_repos.txt")
 
         # UI variables
         self.repo_var = tk.StringVar(value="evanbowman/skyland-beta")
@@ -497,6 +500,7 @@ class DownloaderGUI:
         self._load_config()
         self._refresh_repo_combo()
         self._refresh_repo_dashboard()
+        self._write_tracked_repo_list()
 
         # Poll for worker messages
         self.root.after(200, self._update_ui_loop)
@@ -588,7 +592,24 @@ class DownloaderGUI:
                 json.dump(self.repo_db, f, indent=2)
         except Exception:
             pass
+            
+    def _write_tracked_repo_list(self):
+        """
+        Write the current list of tracked repos to tracked_repos.txt
+        located in the same folder as this script.
+        """
+        try:
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            list_path = os.path.join(script_dir, "tracked_repos.txt")
 
+            with open(list_path, "w", encoding="utf-8") as out:
+                for repo in self.repo_db.get("repos", {}).keys():
+                    out.write(repo + "\n")
+
+            self.log(f"Tracked repo list saved to: {list_path}")
+        except Exception as e:
+            self.log(f"ERROR saving tracked repo list: {e}")
+            
     # ---------- Config ----------
 
     def _load_config(self):
@@ -987,9 +1008,39 @@ class DownloaderGUI:
             return
         self.repo_db["repos"].pop(repo, None)
         self._save_metadb()
+        self._write_tracked_repo_list()
         self._refresh_repo_combo()
         self._refresh_repo_dashboard()
         self.log(f"Removed repo: {repo}")
+
+    # ===========================================
+    # TRACKED REPO LIST HELPERS
+    # ===========================================
+    def _load_tracked_repo_list(self, path):
+        """Load tracked_repos.txt on startup."""
+        if os.path.exists(path):
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        repo = line.strip()
+                        if repo and "/" in repo:
+                            if repo not in self.repo_db.get("repos", {}):
+                                self.repo_db["repos"][repo] = {
+                                    "last_checked": None,
+                                    "last_result": "",
+                                    "assets": {},
+                                }
+            except Exception:
+                pass
+
+    def _write_tracked_repo_list(self):
+        """Write tracked_repos.txt whenever repos change."""
+        try:
+            with open("tracked_repos.txt", "w", encoding="utf-8") as f:
+                for repo in sorted(self.repo_db.get("repos", {}).keys()):
+                    f.write(repo + "\n")
+        except Exception as e:
+            self.log(f"ERROR writing tracked_repos.txt: {e}")
 
     # ---------- Misc handlers ----------
 
@@ -1061,8 +1112,10 @@ class DownloaderGUI:
             self._save_metadb()
             self._refresh_repo_combo()
             self._refresh_repo_dashboard()
+            self._write_tracked_repo_list()
             messagebox.showinfo("Added", f"Repo added:\n{repo_text}")
             self.log(f"Added repo {repo_text}")
+
         else:
             messagebox.showinfo("Exists", f"Repo already tracked:\n{repo_text}")
 
@@ -1192,6 +1245,7 @@ class DownloaderGUI:
 
         self.current_repo_key = repo_text
         self._ensure_repo_in_db(repo_text)
+        self._write_tracked_repo_list()
 
         tasks, total_seen = self._compute_repo_tasks(repo_text)
         if total_seen == 0:
@@ -1312,6 +1366,27 @@ class DownloaderGUI:
             tag = rel.get("tag_name") or rel.get("name") or "untagged"
             tag_folder = os.path.join(repo_root, tag)
             os.makedirs(tag_folder, exist_ok=True)
+
+            # -----------------------------------------------------------
+            # Write release notes inside the tag folder
+            # -----------------------------------------------------------
+            release_body = rel.get("body") or ""
+            notes_path = os.path.join(tag_folder, "release_notes.txt")
+
+            try:
+                # If release has no description, write a blank file
+                with open(notes_path, "w", encoding="utf-8") as nf:
+                    nf.write(f"Release Notes for {repo_text} — {tag}\n")
+                    nf.write(f"Published: {rel.get('published_at','')}\n\n")
+                    nf.write("------------------------------------------------------------\n\n")
+                    if release_body.strip():
+                        nf.write(release_body)
+                    else:
+                        nf.write("(No release description provided.)\n")
+                self.log(f"Saved release notes: {notes_path}")
+            except Exception as e:
+                self.log(f"ERROR writing release notes for {repo_text}/{tag}: {e}")
+
 
             tag_assets_db = assets_db.get(tag, {})
             for asset in rel.get("assets", []):
