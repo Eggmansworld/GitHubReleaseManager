@@ -265,6 +265,14 @@ If you improve the script, feel free to share your changes back with the communi
 
 ---
 
-## 📜 License
+## Licensing
 
-MIT License — free to use, modify, and redistribute.
+Original source code, scripts, tooling, and hand-authored documentation and
+metadata in this repository are licensed under the MIT License.
+
+Archived game data, binaries, firmware, media assets, and other third-party
+materials are **not** covered by the MIT License and remain the property of
+their respective copyright holders.
+
+See the `LICENSE` and `NOTICE` files for full details and scope clarification
+within the repository that pertains to these files.
