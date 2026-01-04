@@ -5,6 +5,8 @@ A multi-repo GitHub preservation toolkit.
 Eggman’s GitHub Release Manager is a multi-repo GitHub release downloader with metadata tracking, incremental updates, hash verification, auto-update scheduling, Discord notifications, and export utilities (generate RomVault dats, PDF/TXT summaries, CSV/JSON metadata).
 It is built using Python + Tkinter and supports optional drag-and-drop (tkinterdnd2) and optional PDF generation (reportlab).
 
+This app is for downloading repository RELEASES, it does NOT download the main source code. It will download ALL releases available, back to the beginning of time.
+
 GENERAL FEATURES
 ---
 - Track multiple GitHub repositories at once.
