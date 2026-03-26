@@ -871,9 +871,10 @@ class DownloaderGUI:
         repo_scroll.grid(row=0, column=1, sticky="ns")
 
         # Colour tags
-        self.repo_tree.tag_configure("green", foreground="#99ff99")
-        self.repo_tree.tag_configure("yellow", foreground="#ffcc66")
-        self.repo_tree.tag_configure("red", foreground="#ff6666")
+        self.repo_tree.tag_configure("green",   foreground="#99ff99")   # up to date
+        self.repo_tree.tag_configure("orange",  foreground="#ff9900")   # OK > 0 (changes downloaded)
+        self.repo_tree.tag_configure("red",     foreground="#ff6666")   # Failed > 0
+        self.repo_tree.tag_configure("default", foreground="#ffcc66")   # not yet checked
 
         self.repo_menu = tk.Menu(self.root, tearoff=0)
         self.repo_menu.add_command(label="Open Repo Folder", command=self._ctx_open_folder)
@@ -923,18 +924,29 @@ class DownloaderGUI:
             last_result = info.get("last_result") or ""
 
             # determine colour tag
-            tag = "yellow"
-            if "Up to date" in (last_result or ""):
-                tag = "green"
-            elif "Failed" in (last_result or ""):
-                tag = "red"
+            lr = last_result or ""
+            color_tag = "default"
+            if "Up to date" in lr:
+                color_tag = "green"
+            elif "Failed=" in lr:
+                try:
+                    failed_n = int(lr.split("Failed=")[1].split(",")[0].strip())
+                except Exception:
+                    failed_n = 1
+                color_tag = "red" if failed_n > 0 else "green"
+            elif "OK=" in lr:
+                try:
+                    ok_n = int(lr.split("OK=")[1].split(",")[0].strip())
+                except Exception:
+                    ok_n = 1
+                color_tag = "orange" if ok_n > 0 else "green"
 
             self.repo_tree.insert(
                 "",
                 "end",
                 iid=repo_key,
                 values=(repo_key, last_checked, last_result),
-                tags=(tag,),
+                tags=(color_tag,),
             )
 
     # ---------- Treeview interactions ----------
