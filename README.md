@@ -1,11 +1,7 @@
 EGGMAN'S GITHUB RELEASE MANAGER
 --------------------------------
-A multi-repo GitHub preservation toolkit.
-
-Eggman’s GitHub Release Manager is a multi-repo GitHub release downloader with metadata tracking, incremental updates, hash verification, auto-update scheduling, Discord notifications, and export utilities (generate RomVault dats, PDF/TXT summaries, CSV/JSON metadata).
-It is built using Python + Tkinter and supports optional drag-and-drop (tkinterdnd2) and optional PDF generation (reportlab).
-
-This app is for downloading repository RELEASES, it does NOT download the main source code. It will download ALL releases available, back to the beginning of time.
+Eggman’s GitHub Release Manager is a multi-repo GitHub release downloader with metadata tracking, incremental updates, hash verification, auto-update scheduling, Discord notifications, and export utilities such as generate RomVault dats, PDF/TXT summaries,  and CSV/JSON metadata.
+It is built using Python + Tkinter and supports optional drag-and-drop and PDF generation.
 
 GENERAL FEATURES
 ---
@@ -16,6 +12,8 @@ GENERAL FEATURES
 	- Supports resume via HTTP Range requests.
 
 - Multi-threaded downloads with adjustable thread count.
+
+- GitHub API token support - Anonymous GitHub API access is capped at 60 requests/hour. Adding your GitHub token raises the limit to 5,000/hour.
 
 - output a tracked repo's file structure and hash info to a RomVault XML datfile (dats should also work in other Rom managers, but I do not check for usefulness beyond RomVault). This is my MAIN reason for creating this app, so I can routinely create datfiles for repo's I track and preserve their content in my own collection, managed by RomVault.
 
@@ -165,22 +163,19 @@ If you delete these, they will be recreated after you re-add the repo(s) and res
 
 RUNNING THE PROGRAM
 ---
+Run via:
 
+	python "Eggman's GitHub Release Manager.py"
+	
 TIPS:
 - If you decide you want to keep this app as part of your toolkit, place the script somewhere static and use one of the batch files as a shortcut for ease of use
 - it is recommended to setup a static download folder to store the repo's files.
 - The app is portable so you can move your stuff somewhere else, set it up and carry on with your workloads.
 
-Run via:
-
-	python "Eggman's GitHub Release Manager.py"
-
 The interface will open immediately and load saved settings.  I've included some batch files if you want a quick way to get the app started.
 
 DASHBOARD USAGE
 ---
-<img width="1185" height="511" alt="image" src="https://github.com/user-attachments/assets/793ace52-7fb6-4e20-9719-c2246310868d" />
-
 1. Adding a Repo:
 - Enter "owner/repo" in the GitHub repo box
 	- example:  Eggmansworld/Datfiles
@@ -230,7 +225,7 @@ DASHBOARD USAGE
 	- Send Discord notifications (optional)
 	- Runs quietly in the background.
 
-NOTE!  Avoid excessively frequent update checks to prevent GitHub rate-limiting. I would recommend checking your repos every 6 hours or more, especially on large repos with many files. If you are seeing rate limited messages in the activity window, SLOW DOWN YOUR UPDATE REQUESTS.  It's not my ass on the line if you do stupid things.
+WARNING!  Avoid excessively frequent update checks to prevent GitHub rate-limiting. Anonymous GitHub access is 50 requests/hr. Using a free API token gives you 5,000/hr. If you are seeing rate limited messages in the activity window, SLOW DOWN YOUR UPDATE REQUESTS.  It's not my ass on the line if you do stupid things.
 
 MAINTENANCE TOOLS
 ---
@@ -256,25 +251,9 @@ NOTES
 - PDF support requires reportlab; otherwise TXT summary is used
 - DAT exports are simplified and suitable for basic set tracking
 
-## CREDITS
+CREDITS
 ---
 
-Created with love for the preservation community by Eggman, with ChatGPT’s help turning ideas into code.
-
-I am by no means a coder! I've never received or taken any formal training since a brief stint of Java and ASM in College a long, long time ago. I create scripts and tools that assist my own needs and projects and as long as they work, I'm not overly concerned about how they look or feel. Do not expect the code you find here to be free from defects or devoid of benign code snippets I forgot to remove. I enjoy learning how to take my ideas and turn them into code with a heavy amount of assistance from AI, and I'm not at all ashamed of admitting such. I share this code for any other data preservationists who might also find the script useful for their own needs. I understand there are lots of tools that already do much of what my tool does, and do it way better. This is all a learning experience for me so I can create my own apps that are tailored to my needs and save myself time by automating some of the painfully manual tasks I would otherwise have to suffer through. If you think my code is bad, I wholeheartedly agree it probably is. If you can "Rock the Casbah" with your own superior coding skills, please feel free to create your own version of this app and let me know - I look forward to checking it out!
+Created for the preservation community by Eggman, with Claude’s help turning ideas into code.
 
 If you improve the script, feel free to share your changes back with the community.
-
----
-
-## Licensing
-
-Original source code, scripts, tooling, and hand-authored documentation and
-metadata in this repository are licensed under the MIT License.
-
-Archived game data, binaries, firmware, media assets, and other third-party
-materials are **not** covered by the MIT License and remain the property of
-their respective copyright holders.
-
-See the `LICENSE` and `NOTICE` files for full details and scope clarification
-within the repository that pertains to these files.
