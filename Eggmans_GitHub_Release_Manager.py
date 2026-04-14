@@ -43,8 +43,8 @@ if getattr(sys, "frozen", False):
 else:
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-CONFIG_PATH = os.path.join(BASE_DIR, "eggman_github_dl_config.json")
-METADB_PATH = os.path.join(BASE_DIR, "eggman_github_repos.json")
+CONFIG_PATH = os.path.join(BASE_DIR, "Eggmans_GitHub_Release_Manager_config.json")
+METADB_PATH = os.path.join(BASE_DIR, "Eggmans_GitHub_Release_Manager_repos.json")
 
 
 # ==============================
@@ -477,6 +477,10 @@ class DownloaderGUI:
 
         # Auto update
         self.auto_update_job = None
+
+        # Flash animation for "please wait" state
+        self._flash_job = None
+        self._flash_visible = True
 
         # multi-repo DB
         self.repo_db = self._load_metadb()
@@ -942,6 +946,35 @@ class DownloaderGUI:
         if line_count > 500:
             self.log_text.delete("1.0", f"{line_count - 400}.0")
 
+    # ---------- Flash status ----------
+
+    def _start_flash(self, msg):
+        """Show a flashing message on info_label. Stops automatically when _stop_flash() is called."""
+        self._stop_flash()  # cancel any existing flash first
+        self.info_label.config(text=msg)
+        self._flash_visible = True
+
+        def _toggle():
+            if self._flash_job is None:
+                # Stopped — restore label to fully visible with default colour
+                self.info_label.configure(foreground="#ff9900")
+                return
+            self._flash_visible = not self._flash_visible
+            colour = "#ff9900" if self._flash_visible else "#1e1e1e"
+            self.info_label.configure(foreground=colour)
+            self._flash_job = self.root.after(500, _toggle)
+
+        self._flash_job = self.root.after(500, _toggle)
+        # Force the UI to actually paint the label before the blocking API call
+        self.root.update_idletasks()
+
+    def _stop_flash(self):
+        """Cancel flashing and restore normal label appearance."""
+        if self._flash_job is not None:
+            self.root.after_cancel(self._flash_job)
+            self._flash_job = None
+        self.info_label.configure(foreground="#ff9900")
+
     # ---------- Repo dashboard ----------
 
     def _refresh_repo_combo(self):
@@ -1037,6 +1070,7 @@ class DownloaderGUI:
         if self.downloading or self.batch_update_mode:
             messagebox.showwarning("Busy", "Downloads already in progress.")
             return
+        self._start_flash("Processing request, please wait...")
         self._start_repo_update(repo)
 
     def _ctx_open_github(self):
@@ -1240,12 +1274,14 @@ class DownloaderGUI:
         if "/" not in repo_text:
             messagebox.showerror("Error", "Repository must be in the form owner/repo.")
             return
+        self._start_flash("Processing request, please wait...")
         self._start_repo_update(repo_text)
 
     def _update_all_repos_clicked(self):
         if self.downloading or self.batch_update_mode:
             messagebox.showwarning("Busy", "Downloads already in progress.")
             return
+        self._start_flash("Processing request, please wait...")
         self._start_batch_update(auto=False)
 
     def _start_batch_update(self, auto=False):
@@ -1273,6 +1309,7 @@ class DownloaderGUI:
                 f"This will scan and update {len(repo_list)} repos.\n\nProceed?",
             )
             if not ok:
+                self._stop_flash()
                 return
 
         self.batch_update_mode = True
@@ -1301,17 +1338,20 @@ class DownloaderGUI:
         repo_text = self.batch_repo_list.pop(0)
         self.repo_var.set(repo_text)
         self.log(f"Batch: updating {repo_text}...")
+        self._start_flash("Processing request, please wait...")
         self._start_repo_update(repo_text)
 
     def _start_repo_update(self, repo_text):
         root_outdir = self.folder_var.get().strip()
         if not root_outdir:
+            self._stop_flash()
             messagebox.showerror("Error", "Please specify a root download folder.")
             return
 
         try:
             os.makedirs(root_outdir, exist_ok=True)
         except Exception as e:
+            self._stop_flash()
             messagebox.showerror("Error", f"Cannot create root folder:\n{e}")
             return
 
@@ -1324,13 +1364,37 @@ class DownloaderGUI:
             self.max_threads_var.set(max_threads)
 
         self._save_config()
-
         self.current_repo_key = repo_text
         self._ensure_repo_in_db(repo_text)
         self._write_tracked_repo_list()
 
-        tasks, total_seen = self._compute_repo_tasks(repo_text)
+        # Disable buttons now so the user can't queue a second update
+        # while the API call is in flight.
+        self.start_btn.config(state="disabled")
+        self.update_all_btn.config(state="disabled")
+
+        # Ensure the flash is visible and running before we hand off to the thread.
+        self._start_flash("Processing request, please wait...")
+
+        # Run the blocking GitHub API call in a background thread so the
+        # main event loop stays alive and the flash keeps animating.
+        def _fetch():
+            try:
+                result = self._compute_repo_tasks(repo_text)
+            except Exception as e:
+                result = ([], 0)
+            self.root.after(0, lambda: self._on_tasks_computed(repo_text, result, max_threads))
+
+        threading.Thread(target=_fetch, daemon=True).start()
+
+    def _on_tasks_computed(self, repo_text, result, max_threads):
+        """Called on the main thread once _compute_repo_tasks() has finished."""
+        tasks, total_seen = result
+
         if total_seen == 0:
+            self._stop_flash()
+            self.start_btn.config(state="normal")
+            self.update_all_btn.config(state="normal")
             self.info_label.config(text="No release assets found.")
             self.log(f"{repo_text}: no assets found.")
             if self.batch_update_mode:
@@ -1339,6 +1403,9 @@ class DownloaderGUI:
             return
 
         if not tasks and self.skip_existing_var.get():
+            self._stop_flash()
+            self.start_btn.config(state="normal")
+            self.update_all_btn.config(state="normal")
             self.info_label.config(text="Already up to date.")
             self.log(f"{repo_text}: already up to date.")
             self._update_repo_last_result(repo_text, "Up to date")
@@ -1349,6 +1416,7 @@ class DownloaderGUI:
             return
 
         # Ready to download
+        self._stop_flash()
         self.downloading = True
         self.run_cancelled = False
         self.stop_soft = False
@@ -1362,8 +1430,7 @@ class DownloaderGUI:
         self.progress["maximum"] = self.total_tasks
         self.progress["value"] = 0
         self.status_label.config(text="")
-        self.start_btn.config(state="disabled")
-        self.update_all_btn.config(state="disabled")
+        # Buttons already disabled above; they stay disabled until _finalize_downloads
 
         self.info_label.config(
             text=f"{repo_text}: downloading {self.total_tasks} asset(s) (seen {total_seen})..."
@@ -1402,7 +1469,6 @@ class DownloaderGUI:
 
         # mark last_checked
         self._update_repo_timestamp(repo_text)
-
 
         # Preserve existing repo entry if present
         if repo_text not in self.repo_db["repos"]:
@@ -1572,6 +1638,7 @@ class DownloaderGUI:
         self._cancel_run_ui("Hard stop requested. Downloads aborted ASAP.")
 
     def _cancel_run_ui(self, msg):
+        self._stop_flash()
         self.downloading = False
         self.run_cancelled = True
         self.pause_flag = False
