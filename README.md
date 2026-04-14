@@ -39,7 +39,7 @@ pip install reportlab     # optional — PDF summaries; falls back to TXT if mis
 ## Running the Program
 
 ```
-python "Eggman's GitHub Release Manager.py"
+python "Eggmans_GitHub_Release_Manager.py"
 ```
 
 **Tips:**
